@@ -12,6 +12,7 @@ int main()
 
     std::cout << "\n\nMessage:\n" << message;
 
-    main_iteration(uint64_t(0xAAAABBBBCCCCDDDD), 0xAAAAAAAAAAAAAAAA);
+    auto cifer = simple_replacement(message, key);
+    std::cout << "\n\nAfter encrypting:\n" << cifer;
 }
 

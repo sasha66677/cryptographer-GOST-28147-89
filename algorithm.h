@@ -94,4 +94,67 @@ uint64_t main_iteration(uint64_t val, uint32_t key) {
     return result;
 }
 
+/**encryption cycle 32-3 for one block
+*/
+uint64_t simple_replacement(uint64_t block, uint32_t key[]) {
+#ifdef DEBUG
+    std::cout << "\n=======================================\nencrypt\nblock, key \n";
+    output_bin(block);
+    std::cout << std::endl;
+    for (int i = 0; i < 8; ++i) {
+        output_bin(key[i]);
+        std::cout << ' ';
+    }
+    std::cout << std::endl;
+#endif // DEBUG
+
+    for (int k = 0; k < 3; ++k)
+        for (int i = 0; i < 8; ++i) {
+            block = main_iteration(block, key[i]);
+        }
+
+    for (int i = 7; i >= 0; --i) {
+        block = main_iteration(block, key[i]);
+    }
+    uint32_t first_part = block >> 32;
+    uint32_t secod_part = block;
+
+    uint64_t result = (uint64_t(secod_part) << 32) + first_part;
+
+#ifdef DEBUG
+    std::cout << "\nresult\n";
+    output_bin(result);
+    std::cout << "\n=======================================\n";
+#endif // DEBUG
+
+    return result;
+}
+
+/**encryption cycle 32-3 for message
+*/
+std::string simple_replacement(std::string message, uint32_t key[]) {
+    while (message.size() % 8 != 0)
+        message.push_back('\0');
+    std::string result{ "" };
+    uint64_t temp;
+    char ch;
+    for (int i = 0; i + 7 < message.size(); i += 8) {
+        temp = 0;
+        for (int j = 0; j < 8; ++j) {
+            temp <<= 8;
+            temp += static_cast<uint8_t> (message[i + j]);
+        }
+
+        uint64_t encr = simple_replacement(temp, key);
+        for (int j = 7; j >= 0; --j) {
+            ch = static_cast<char>(encr >> 8 * j);
+            result.push_back(ch);
+        }
+    }
+    return result;
+}
+
+
+
+
 #endif
