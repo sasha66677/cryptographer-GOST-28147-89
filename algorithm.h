@@ -217,4 +217,34 @@ std::string simple_replacement_decrypt(std::string message, uint32_t key[]) {
     return result;
 }
 
+
+/**encryption cycle 16-3
+*/
+uint64_t makeMAC(uint64_t block, uint32_t key[]) {
+    for (int k = 0; k < 2; ++k)
+        for (int i = 0; i < 8; ++i) {
+            block = main_iteration(block, key[i]);
+        }
+    return block;
+}
+/**encryption cycle 32-3
+*/
+uint64_t makeMAC(std::string message, uint32_t key[]) {
+    while (message.size() % 8 != 0)
+        message.push_back('\0');
+
+    uint64_t s = 0;
+    uint64_t block;
+    for (int i = 0; i + 7 < message.size(); i += 8) {
+        block = 0;
+        for (int j = 0; j < 8; ++j) {
+            block <<= 8;
+            block += static_cast<uint8_t> (message[i + j]);
+        }
+
+        s = makeMAC(block ^ s, key);
+    }
+    return s;
+}
+
 #endif

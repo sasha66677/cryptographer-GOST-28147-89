@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include "file_services.h"
 #include "algorithm.h"
+#include "debugging.h"
 
 int main()
 {
@@ -15,5 +16,8 @@ int main()
     auto cifer = simple_replacement_encrypt(message, key);
     std::cout << "\n\nAfter encrypting:\n" << cifer;
     std::cout << "\n\nAfter decrypting:\n" << simple_replacement_decrypt(cifer, key);
+
+    std::cout << "\n\Message Authentication Code:\n";
+    output_bin(makeMAC(cifer, key));
 }
 
