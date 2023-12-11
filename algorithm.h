@@ -247,4 +247,49 @@ uint64_t makeMAC(std::string message, uint32_t key[]) {
     return s;
 }
 
+
+uint64_t make_next_s(uint64_t s_prev) {
+    uint32_t first_part = s_prev >> 32;
+    uint32_t second_part = s_prev;
+
+    const uint32_t c0 = 0x1010104;
+    const uint32_t c1 = 0x1010104;
+
+    first_part = uint64_t(first_part + c0) % (uint64_t(1) << 32);
+    second_part = uint64_t(second_part + c1 - 1) % ((uint64_t(1) << 32) - 1) +1;
+    return (uint64_t(first_part) << 32) + second_part;
+}
+
+/**encryption cycle with gamma generation for message
+*/
+std::string gamma_encrypt(std::string message, uint32_t key[], uint64_t s) {
+    while (message.size() % 8 != 0)
+        message.push_back('\0');
+
+    s = simple_replacement_encrypt(s, key);
+
+    std::string result{ "" };
+    uint64_t temp;
+    char ch;
+    for (int i = 0; i + 7 < message.size(); i += 8) {
+        
+        s = make_next_s(s);
+
+        temp = 0;
+        for (int j = 0; j < 8; ++j) {
+            temp <<= 8;
+            temp += static_cast<uint8_t> (message[i + j]);
+        }
+
+
+        uint64_t encr = temp ^ simple_replacement_encrypt(s, key);
+     
+        for (int j = 7; j >= 0; --j) {
+            ch = static_cast<char>(encr >> 8 * j);
+            result.push_back(ch);
+        }
+    }
+    return result;
+}
+
 #endif
