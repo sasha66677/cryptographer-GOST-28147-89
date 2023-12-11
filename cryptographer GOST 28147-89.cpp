@@ -22,11 +22,14 @@ int main()
 
     auto cifer1 = gamma_encrypt(message, key, *first_s);
     std::cout << "\n\ngamma:\n" << cifer1 << '\n';
-    std::cout << "\n\ndegamma:\n" << gamma_encrypt(cifer1, key, *first_s) << '\n';
-
+    std::cout << "\n\ndegamma:\n" << gamma_decrypt(cifer1, key, *first_s) << '\n';
 
     std::cout << "\n\Message Authentication Code:\n";
     output_bin(makeMAC(cifer1, key));
+
+    auto cifer2 = gamma_feedback_encrypt(message, key, *first_s);
+    std::cout << "\n\ngamma with feedback:\n" << cifer2 << '\n';
+    std::cout << "\n\ndegamma with feedback:\n" << gamma_feedback_decrypt(cifer2, key, *first_s) << '\n';
     
     delete first_s;
 }

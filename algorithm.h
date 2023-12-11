@@ -96,7 +96,7 @@ uint64_t main_iteration(uint64_t val, uint32_t key) {
 
 /**encryption cycle 32-3 for one block
 */
-uint64_t simple_replacement_encrypt(uint64_t block, uint32_t key[]) {
+uint64_t simple_replacement_encrypt(uint64_t block, const uint32_t key[]) {
 #ifdef DEBUG
     std::cout << "\n=======================================\nencrypt\nblock, key \n";
     output_bin(block);
@@ -132,7 +132,7 @@ uint64_t simple_replacement_encrypt(uint64_t block, uint32_t key[]) {
 
 /**encryption cycle 32-3 for message
 */
-std::string simple_replacement_encrypt(std::string message, uint32_t key[]) {
+std::string simple_replacement_encrypt(std::string message, const uint32_t key[]) {
     while (message.size() % 8 != 0)
         message.push_back('\0');
     std::string result{ "" };
@@ -158,7 +158,7 @@ std::string simple_replacement_encrypt(std::string message, uint32_t key[]) {
 /** decrypt block
 * decryption cycle 32-P
 */
-uint64_t simple_replacement_decrypt(uint64_t block, uint32_t key[]) {
+uint64_t simple_replacement_decrypt(uint64_t block, const uint32_t key[]) {
 #ifdef DEBUG
     std::cout << "\n=======================================\ndecrypt\nblock, key \n";
     output_bin(block);
@@ -195,7 +195,7 @@ uint64_t simple_replacement_decrypt(uint64_t block, uint32_t key[]) {
 /**encrypt message
 * encryption cycle 32-3
 */
-std::string simple_replacement_decrypt(std::string message, uint32_t key[]) {
+std::string simple_replacement_decrypt(std::string message, const uint32_t key[]) {
     while (message.size() % 8 != 0)
         message.push_back('\0');
     std::string result{ "" };
@@ -220,7 +220,7 @@ std::string simple_replacement_decrypt(std::string message, uint32_t key[]) {
 
 /**encryption cycle 16-3
 */
-uint64_t makeMAC(uint64_t block, uint32_t key[]) {
+uint64_t makeMAC(uint64_t block, const uint32_t key[]) {
     for (int k = 0; k < 2; ++k)
         for (int i = 0; i < 8; ++i) {
             block = main_iteration(block, key[i]);
@@ -229,7 +229,7 @@ uint64_t makeMAC(uint64_t block, uint32_t key[]) {
 }
 /**encryption cycle 32-3
 */
-uint64_t makeMAC(std::string message, uint32_t key[]) {
+uint64_t makeMAC(std::string message, const uint32_t key[]) {
     while (message.size() % 8 != 0)
         message.push_back('\0');
 
@@ -248,7 +248,7 @@ uint64_t makeMAC(std::string message, uint32_t key[]) {
 }
 
 
-uint64_t make_next_s(uint64_t s_prev) {
+uint64_t make_next_s(const uint64_t &s_prev) {
     uint32_t first_part = s_prev >> 32;
     uint32_t second_part = s_prev;
 
@@ -260,9 +260,9 @@ uint64_t make_next_s(uint64_t s_prev) {
     return (uint64_t(first_part) << 32) + second_part;
 }
 
-/**encryption cycle with gamma generation for message
+/**encryption with gamma generation for message
 */
-std::string gamma_encrypt(std::string message, uint32_t key[], uint64_t s) {
+std::string gamma_encrypt(std::string message, const uint32_t key[], uint64_t s) {
     while (message.size() % 8 != 0)
         message.push_back('\0');
 
@@ -292,4 +292,66 @@ std::string gamma_encrypt(std::string message, uint32_t key[], uint64_t s) {
     return result;
 }
 
+/**decryption with gamma generation for message
+*/
+std::string gamma_decrypt(std::string message, const uint32_t key[], uint64_t s) {
+    return gamma_encrypt(message, key, s);
+}
+
+/**encryption with gamma generation with feedback for message
+*/
+std::string gamma_feedback_encrypt(std::string message, const uint32_t key[], uint64_t s) {
+    while (message.size() % 8 != 0)
+        message.push_back('\0');
+
+    std::string result{ "" };
+    uint64_t temp;
+    char ch;
+    for (int i = 0; i + 7 < message.size(); i += 8) {
+        temp = 0;
+        for (int j = 0; j < 8; ++j) {
+            temp <<= 8;
+            temp += static_cast<uint8_t> (message[i + j]);
+        }
+
+        uint64_t encr = temp ^ simple_replacement_encrypt(s, key);
+
+        for (int j = 7; j >= 0; --j) {
+            ch = static_cast<char>(encr >> 8 * j);
+            result.push_back(ch);
+        }
+
+        s = encr;
+    }
+    return result;
+}
+
+
+/**decrypt with gamma generation with feedback for message
+*/
+std::string gamma_feedback_decrypt(std::string message, const uint32_t key[], uint64_t s) {
+    while (message.size() % 8 != 0)
+        message.push_back('\0');
+
+    std::string result{ "" };
+    uint64_t temp;
+    char ch;
+    for (int i = 0; i + 7 < message.size(); i += 8) {
+        temp = 0;
+        for (int j = 0; j < 8; ++j) {
+            temp <<= 8;
+            temp += static_cast<uint8_t> (message[i + j]);
+        }
+
+        uint64_t encr = temp ^ simple_replacement_encrypt(s, key);
+
+        for (int j = 7; j >= 0; --j) {
+            ch = static_cast<char>(encr >> 8 * j);
+            result.push_back(ch);
+        }
+
+        s = temp;
+    }
+    return result;
+}
 #endif
