@@ -12,7 +12,8 @@ int main()
 
     std::cout << "\n\nMessage:\n" << message;
 
-    auto cifer = simple_replacement(message, key);
+    auto cifer = simple_replacement_encrypt(message, key);
     std::cout << "\n\nAfter encrypting:\n" << cifer;
+    std::cout << "\n\nAfter decrypting:\n" << simple_replacement_decrypt(cifer, key);
 }
 
